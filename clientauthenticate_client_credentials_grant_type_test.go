@@ -32,6 +32,8 @@ func TestAuthenticateClient_other_grant_types(t *testing.T) {
 	not_in_storage := false;
 	proceed_expected := true;
 	proceed_not_expected := false;
+	with_www_auth := true;
+	no_www_auth := false;
 
 	var tests = []struct {
 		id                      int
@@ -43,76 +45,77 @@ func TestAuthenticateClient_other_grant_types(t *testing.T) {
 		storedAuthMethod		AuthMethod
 		canProceed       		bool
 		returnedError			string
+		must_return_www_auth    bool
 		
 	}{
-	{1, headerNoAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   proceed_not_expected, E_INVALID_CLIENT},
-	{2, headerNoAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected,     E_INVALID_CLIENT},
-	{231,headerNoAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_POST,   	proceed_expected, 	   NO_ERROR},
-	{3, headerNoAuth, param_id("123"), param_secret("secret"), not_in_storage, "", 	     CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{4, headerNoAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{5, headerNoAuth, param_id("123"), param_secret(""),       in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{6, headerNoAuth, param_id("123"), param_secret(""),	      in_storage,     "", 		 CLIENT_SECRET_BASIC,   	  proceed_not_expected,     E_INVALID_CLIENT},
-	{7, headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "", 		 CLIENT_SECRET_BASIC,   	  proceed_not_expected,     E_INVALID_CLIENT},
-	{8, headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{9, headerNoAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "", 	     CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{10,headerNoAuth, no_param_id()  , no_param_secret(), 	  not_in_storage, "", 	     CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{11,headerNoAuth, param_id("noredirect"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, 	  E_INVALID_CLIENT},
+	{1, headerNoAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{2, headerNoAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected,     E_INVALID_CLIENT, no_www_auth},
+	{231,headerNoAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_POST,   	proceed_expected, 	   NO_ERROR, no_www_auth},
+	{3, headerNoAuth, param_id("123"), param_secret("secret"), not_in_storage, "", 	     CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{4, headerNoAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{5, headerNoAuth, param_id("123"), param_secret(""),       in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{6, headerNoAuth, param_id("123"), param_secret(""),	      in_storage,     "", 		 CLIENT_SECRET_BASIC,   	  proceed_not_expected,     E_INVALID_CLIENT, no_www_auth},
+	{7, headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "", 		 CLIENT_SECRET_BASIC,   	  proceed_not_expected,     E_INVALID_CLIENT, no_www_auth},
+	{8, headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{9, headerNoAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "", 	     CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{10,headerNoAuth, no_param_id()  , no_param_secret(), 	  not_in_storage, "", 	     CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{11,headerNoAuth, param_id("noredirect"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, 	  E_INVALID_CLIENT, no_www_auth},
 	
-	{12,headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "", 		 NONE	   ,   proceed_expected, 	   NO_ERROR},
-	{13,headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "", 		 NONE	   ,   	proceed_expected, 	   NO_ERROR},
-	{14,headerNoAuth, param_id("123"), no_param_secret(),      not_in_storage, "", 		 NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{15,headerNoAuth, param_id("123"), param_secret("secret"), not_in_storage, "", 		 NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{16,headerNoAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret", NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{17,headerNoAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "", 	     NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{18,headerNoAuth, no_param_id()  , no_param_secret(),      not_in_storage, "", 	     NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{19,headerNoAuth, param_id("123"), param_secret(""),       in_storage,     "", 		 NONE	   ,   	proceed_expected, 	   NO_ERROR},
-	{20,headerNoAuth, param_id("123"), param_secret(""),       in_storage,     "secret", NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{21,headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "secret", NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT},
-	{22,headerNoAuth, param_id("noredirect"), no_param_secret(), in_storage,     "",     NONE    ,   	proceed_not_expected, E_INVALID_CLIENT},
+	{12,headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "", 		 NONE	   ,   proceed_expected, 	   NO_ERROR, no_www_auth},
+	{13,headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "", 		 NONE	   ,   	proceed_expected, 	   NO_ERROR, no_www_auth},
+	{14,headerNoAuth, param_id("123"), no_param_secret(),      not_in_storage, "", 		 NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{15,headerNoAuth, param_id("123"), param_secret("secret"), not_in_storage, "", 		 NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{16,headerNoAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret", NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{17,headerNoAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "", 	     NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{18,headerNoAuth, no_param_id()  , no_param_secret(),      not_in_storage, "", 	     NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{19,headerNoAuth, param_id("123"), param_secret(""),       in_storage,     "", 		 NONE	   ,   	proceed_expected, 	   NO_ERROR, no_www_auth},
+	{20,headerNoAuth, param_id("123"), param_secret(""),       in_storage,     "secret", NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{21,headerNoAuth, param_id("123"), no_param_secret(),      in_storage,     "secret", NONE	   ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
+	{22,headerNoAuth, param_id("noredirect"), no_param_secret(), in_storage,     "",     NONE    ,   	proceed_not_expected, E_INVALID_CLIENT, no_www_auth},
 	
-	{22,headerBadAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,    proceed_not_expected, E_INVALID_CLIENT},
-	{23,headerBadAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, 	   E_INVALID_CLIENT},
-	{230,headerBadAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_POST,   	proceed_expected, 	   NO_ERROR},
-	{24,headerBadAuth, param_id("123"), param_secret("secret"), not_in_storage, "",       CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT},
-	{25,headerBadAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT},
-	{26,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "secret", CLIENT_SECRET_BASIC,   	    proceed_not_expected, E_INVALID_CLIENT},
-	{27,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "", 	  CLIENT_SECRET_BASIC,   	    proceed_not_expected, 	   E_INVALID_CLIENT},
-	{28,headerBadAuth, param_id("123"), no_param_secret(), 	   in_storage,     "", 	  CLIENT_SECRET_BASIC,   	    proceed_not_expected, 	   E_INVALID_CLIENT},
-	{29,headerBadAuth, param_id("123"), no_param_secret(),      in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT},
-	{30,headerBadAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "",       CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT},
-	{31,headerBadAuth, no_param_id()  , no_param_secret(), 	   not_in_storage, "",       CLIENT_SECRET_BASIC,   	    proceed_not_expected, E_INVALID_CLIENT},
+	{22,headerBadAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{23,headerBadAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, 	   E_INVALID_CLIENT, with_www_auth},
+	{230,headerBadAuth, param_id("123"), param_secret("secret"), in_storage,     "secret", CLIENT_SECRET_POST,   	proceed_expected, 	   NO_ERROR, no_www_auth},
+	{24,headerBadAuth, param_id("123"), param_secret("secret"), not_in_storage, "",       CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{25,headerBadAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{26,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "secret", CLIENT_SECRET_BASIC,   	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{27,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "", 	  CLIENT_SECRET_BASIC,   	    proceed_not_expected, 	   E_INVALID_CLIENT, with_www_auth},
+	{28,headerBadAuth, param_id("123"), no_param_secret(), 	   in_storage,     "", 	  CLIENT_SECRET_BASIC,   	    proceed_not_expected, 	   E_INVALID_CLIENT, with_www_auth},
+	{29,headerBadAuth, param_id("123"), no_param_secret(),      in_storage,     "secret", CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{30,headerBadAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "",       CLIENT_SECRET_BASIC,   	proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{31,headerBadAuth, no_param_id()  , no_param_secret(), 	   not_in_storage, "",       CLIENT_SECRET_BASIC,   	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
 	
-	{32,headerBadAuth, param_id("123"), no_param_secret(),      in_storage,     "",        NONE	   ,  	proceed_expected, 	   NO_ERROR},
-	{33,headerBadAuth, param_id("123"), no_param_secret(),      in_storage,     "",        NONE	   ,      proceed_expected, 	   NO_ERROR},
-	{34,headerBadAuth, param_id("123"), no_param_secret(),      not_in_storage, "",        NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT},
-	{35,headerBadAuth, param_id("123"), param_secret("secret"), not_in_storage, "",        NONE	   ,      proceed_not_expected, E_INVALID_CLIENT},
-	{36,headerBadAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret",  NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT},
-	{37,headerBadAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "",        NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT},
-	{38,headerBadAuth, no_param_id()  , no_param_secret(), 	   not_in_storage, "",        NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT},
-	{39,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "",        NONE	   ,  	    proceed_expected, 	   NO_ERROR},
-	{40,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "secret",  NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT},
-	{41,headerBadAuth, param_id("123"), no_param_secret(), 	   in_storage,     "secret",  NONE	   ,      proceed_not_expected, E_INVALID_CLIENT},
+	{32,headerBadAuth, param_id("123"), no_param_secret(),      in_storage,     "",        NONE	   ,  	proceed_expected, 	   NO_ERROR, no_www_auth},
+	{33,headerBadAuth, param_id("123"), no_param_secret(),      in_storage,     "",        NONE	   ,      proceed_expected, 	   NO_ERROR, no_www_auth},
+	{34,headerBadAuth, param_id("123"), no_param_secret(),      not_in_storage, "",        NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{35,headerBadAuth, param_id("123"), param_secret("secret"), not_in_storage, "",        NONE	   ,      proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{36,headerBadAuth, param_id("123"), param_secret("xxxxxx"), in_storage,     "secret",  NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{37,headerBadAuth, no_param_id()  , param_secret("xxxxxx"), not_in_storage, "",        NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{38,headerBadAuth, no_param_id()  , no_param_secret(), 	   not_in_storage, "",        NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{39,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "",        NONE	   ,  	    proceed_expected, 	   NO_ERROR, no_www_auth},
+	{40,headerBadAuth, param_id("123"), param_secret(""), 	   in_storage,     "secret",  NONE	   ,  	    proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{41,headerBadAuth, param_id("123"), no_param_secret(), 	   in_storage,     "secret",  NONE	   ,      proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
 	
 	
-	{42,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,     "secret", CLIENT_SECRET_BASIC,    proceed_expected,     NO_ERROR},
-	{43,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_expected,     NO_ERROR},
-	{430,headerOKAuth("", ""),         param_id("123"), param_secret("secret"),in_storage,     "secret", CLIENT_SECRET_POST,   	  proceed_not_expected,     E_INVALID_CLIENT},
-	{44,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), not_in_storage, "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{45,headerOKAuth("456", "xxxxxx"), no_param_id(), no_param_secret(), in_storage, 	 "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{46,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage, 	 "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{47,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage,     "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, 	 E_INVALID_CLIENT},
-	{48,headerOKAuth("", "xxxxxx"),    no_param_id(), no_param_secret(), not_in_storage, "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
-	{49,headerOKAuth("", ""),    		 no_param_id(), no_param_secret(), not_in_storage, "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT},
+	{42,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,     "secret", CLIENT_SECRET_BASIC,    proceed_expected,     NO_ERROR, no_www_auth},
+	{43,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,     "secret", CLIENT_SECRET_BASIC,   	  proceed_expected,     NO_ERROR, no_www_auth},
+	{430,headerOKAuth("", ""),         param_id("123"), param_secret("secret"),in_storage,     "secret", CLIENT_SECRET_POST,   	  proceed_not_expected,     E_INVALID_CLIENT, with_www_auth},
+	{44,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), not_in_storage, "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{45,headerOKAuth("456", "xxxxxx"), no_param_id(), no_param_secret(), in_storage, 	 "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{46,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage, 	 "secret", CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{47,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage,     "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, 	 E_INVALID_CLIENT, with_www_auth},
+	{48,headerOKAuth("", "xxxxxx"),    no_param_id(), no_param_secret(), not_in_storage, "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{49,headerOKAuth("", ""),    		 no_param_id(), no_param_secret(), not_in_storage, "", 	   CLIENT_SECRET_BASIC,   	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
 	
-	{50,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,       "secret", NONE,  		 proceed_expected, 	 NO_ERROR},
-	{51,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,       "secret", NONE,  		 	  proceed_expected, 	 NO_ERROR},
-	{52,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), not_in_storage,   "", 	      NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT},
-	{53,headerOKAuth("456", "xxxxxx"), no_param_id(), no_param_secret(), in_storage, 		"secret", NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT},
-	{54,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage, 		"secret", NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT},
-	{55,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage, 		"", 	  NONE,  		 	  proceed_expected, 	 NO_ERROR},
-	{56,headerOKAuth("", "xxxxxx"),    no_param_id(), no_param_secret(), not_in_storage,	"", 	  NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT},
-	{57,headerOKAuth("", ""),    		 no_param_id(), no_param_secret(), not_in_storage,	"", 	  NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT},
-	{58,headerOKAuth("noredirect", "secret"), no_param_id(), no_param_secret(), in_storage, "secret",NONE,        	  proceed_not_expected, E_INVALID_CLIENT},
+	{50,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,       "secret", NONE,  		 proceed_expected, 	 NO_ERROR, no_www_auth},
+	{51,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), in_storage,       "secret", NONE,  		 	  proceed_expected, 	 NO_ERROR, no_www_auth},
+	{52,headerOKAuth("456", "secret"), no_param_id(), no_param_secret(), not_in_storage,   "", 	      NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{53,headerOKAuth("456", "xxxxxx"), no_param_id(), no_param_secret(), in_storage, 		"secret", NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{54,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage, 		"secret", NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{55,headerOKAuth("456", ""),       no_param_id(), no_param_secret(), in_storage, 		"", 	  NONE,  		 	  proceed_expected, 	 NO_ERROR, no_www_auth},
+	{56,headerOKAuth("", "xxxxxx"),    no_param_id(), no_param_secret(), not_in_storage,	"", 	  NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{57,headerOKAuth("", ""),    		 no_param_id(), no_param_secret(), not_in_storage,	"", 	  NONE,  		 	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
+	{58,headerOKAuth("noredirect", "secret"), no_param_id(), no_param_secret(), in_storage, "secret",NONE,        	  proceed_not_expected, E_INVALID_CLIENT, with_www_auth},
 
 	}
 
@@ -174,6 +177,10 @@ func TestAuthenticateClient_other_grant_types(t *testing.T) {
 		
 		if tt.returnedError != result.Error {
 			t.Errorf("Expected error '%v' but was '%v',  %v", tt.returnedError, result.Error, tt)
+		}
+		
+		if tt.must_return_www_auth != result.MustReturn401 {
+			t.Errorf("Expected www-authenticate to be '%v' but was '%v',  %v", tt.must_return_www_auth, result.MustReturn401, tt)
 		}
 	}
 
