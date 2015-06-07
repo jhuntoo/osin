@@ -496,7 +496,7 @@ func ApplyToResponse(w *Response, result *ClientAuthenticationResult, realm stri
 	
 	if result.MustReturn401 {
 		w.StatusCode = http.StatusUnauthorized
-		w.Headers.Add("WWW-Authenticate", "Basic ream=" + realm)
+		w.Headers.Add("WWW-Authenticate", "Basic realm=" + realm)
 	} else {
 		w.StatusCode = http.StatusBadRequest
 	}

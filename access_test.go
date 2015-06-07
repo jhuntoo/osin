@@ -1,6 +1,7 @@
 package osin
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"testing"
@@ -215,4 +216,49 @@ func TestExtraScopes(t *testing.T) {
 		t.Fatalf("extraScopes returned false with extra scopes")
 	}
 
+}
+
+
+
+func TestApplyToResponse_Http400(t *testing.T) {
+	response := &Response{}
+	authResult := &ClientAuthenticationResult { MustReturn401 : false, Error: "abc", InternalError: errors.New("TEST")}
+	
+	ApplyToResponse(response,authResult, "example.com")
+	
+	if response.StatusCode != http.StatusBadRequest {
+		t.Fatalf("HttpStatus should be 400")
+	}
+	if response.Output["error_description"]!= "abc"{
+		t.Fatalf("Error descrption is wrong")
+	}
+
+	if response.InternalError.Error()!= "TEST"{
+		t.Fatalf("Internal error is wrong")
+	}
+	if response.Headers.Get("WWW-Authenticate")!= ""{
+		t.Fatalf("WW-Authenticate should not be present")
+	}
+}
+
+
+func TestApplyToResponse_Http401(t *testing.T) {
+	response := &Response{Headers : make(http.Header)}
+	authResult := &ClientAuthenticationResult { MustReturn401 : true, Error: "abc", InternalError: errors.New("TEST")}
+
+	ApplyToResponse(response,authResult, "example.com")
+
+	if response.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("HttpStatus should be 401")
+	}
+	if response.Output["error_description"]!= "abc"{
+		t.Fatalf("Error descrption is wrong")
+	}
+
+	if response.InternalError.Error()!= "TEST"{
+		t.Fatalf("Internal error is wrong")
+	}
+	if response.Headers.Get("WWW-Authenticate")!= "Basic realm=example.com"{
+		t.Fatalf("WW-Authenticate should be present")
+	}
 }
