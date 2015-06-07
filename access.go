@@ -509,24 +509,24 @@ func ApplyToResponse(w *Response, result *ClientAuthenticationResult, realm stri
 
 // getClient looks up and authenticates the basic auth using the given
 // storage. Sets an error on the response if auth fails or a server error occurs.
-func getClient(auth *BasicAuth, storage Storage, w *Response) Client {
-	client, err := storage.GetClient(auth.Username)
-	if err != nil {
-		w.SetError(E_SERVER_ERROR, "")
-		w.InternalError = err
-		return nil
-	}
-	if client == nil {
-		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-		return nil
-	}
-	if client.GetSecret() != auth.Password {
-		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-		return nil
-	}
-	if client.GetRedirectUri() == "" {
-		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-		return nil
-	}
-	return client
-}
+//func getClient(auth *BasicAuth, storage Storage, w *Response) Client {
+//	client, err := storage.GetClient(auth.Username)
+//	if err != nil {
+//		w.SetError(E_SERVER_ERROR, "")
+//		w.InternalError = err
+//		return nil
+//	}
+//	if client == nil {
+//		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+//		return nil
+//	}
+//	if client.GetSecret() != auth.Password {
+//		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+//		return nil
+//	}
+//	if client.GetRedirectUri() == "" {
+//		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+//		return nil
+//	}
+//	return client
+//}
